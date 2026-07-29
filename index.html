@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Danielle Cristina - Moda Íntima & Pijamas</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#7A122C" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              DEFAULT: '#7A122C',
+              dark: '#580B1E',
+              light: '#FDF2F4',
+              accent: '#E06D88',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .scrollbar-none::-webkit-scrollbar { display: none; }
+    .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+  <!-- Header -->
+  <header class="bg-white/95 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-rose-100">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center gap-2">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full border-2 border-brand flex items-center justify-center font-serif text-brand font-bold text-lg bg-brand-light flex-shrink-0">
+          DC
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-brand leading-tight">Danielle Cristina</h1>
+          <p class="text-[10px] uppercase tracking-widest text-gray-500 font-semibold">Moda Íntima</p>
+        </div>
+      </div>
+      
+      <button onclick="toggleCart()" class="relative bg-brand-light text-brand px-4 py-2 rounded-full font-medium flex items-center gap-2 hover:bg-rose-100 transition border border-rose-200 text-sm flex-shrink-0">
+        <span>🛒 Carrinho</span>
+        <span id="cart-count" class="bg-brand text-white text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Banner Topo -->
+  <section class="bg-gradient-to-r from-brand-light via-rose-50 to-pink-50 py-6 px-4 text-center border-b border-rose-100">
+    <div class="max-w-3xl mx-auto">
+      <span class="text-xs font-semibold uppercase tracking-widest text-brand bg-white/90 px-3 py-1 rounded-full border border-rose-200 inline-block mb-2">Conforto & Elegância</span>
+      <h2 class="text-2xl md:text-3xl font-serif text-brand font-bold mb-2">Sinta-se incrível todos os dias</h2>
+      <div class="flex justify-center gap-3 text-xs">
+        <span class="bg-white/80 text-gray-700 px-3 py-1 rounded-lg border border-gray-200">📍 Retirar na Loja</span>
+        <span class="bg-white/80 text-gray-700 px-3 py-1 rounded-lg border border-gray-200">📦 Envio via Correios</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 🎯 CARROSSEL DE DESTAQUES (PROMOÇÕES) -->
+  <section id="promo-section" class="max-w-6xl mx-auto px-4 pt-6">
+    <div class="flex items-center justify-between mb-3">
+      <div class="flex items-center gap-2">
+        <span class="text-xl">🔥</span>
+        <h3 class="text-lg font-bold text-brand font-serif">Ofertas Imperdíveis</h3>
+      </div>
+      
+      <!-- Setas de Navegação -->
+      <div class="flex gap-2">
+        <button onclick="scrollPromo(-1)" class="w-8 h-8 rounded-full bg-white border border-rose-200 text-brand font-bold shadow-sm hover:bg-brand hover:text-white transition flex items-center justify-center">
+          ❮
+        </button>
+        <button onclick="scrollPromo(1)" class="w-8 h-8 rounded-full bg-white border border-rose-200 text-brand font-bold shadow-sm hover:bg-brand hover:text-white transition flex items-center justify-center">
+          ❯
+        </button>
+      </div>
+    </div>
+
+    <div id="promo-container" class="flex gap-4 overflow-x-auto scroll-smooth scrollbar-none py-2 snap-x snap-mandatory">
+      <!-- Gerado via JS -->
+    </div>
+  </section>
+
+  <!-- Busca e Filtros de Categorias -->
+  <div class="max-w-6xl mx-auto px-4 pt-6 pb-2 space-y-3">
+    <h3 class="text-base font-bold text-gray-800 font-serif">Catálogo de Produtos</h3>
+    <div class="relative max-w-md">
+      <input 
+        type="text" 
+        id="search-input" 
+        oninput="renderProducts()" 
+        placeholder="🔍 Buscar produto por nome, cor ou detalhe..." 
+        class="w-full bg-white border border-rose-200 rounded-full py-2.5 px-4 text-xs shadow-sm focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand text-gray-700"
+      />
+    </div>
+
+    <!-- Botões de Categoria (Incluindo 'Mais Vendidos') -->
+    <div class="flex gap-2 overflow-x-auto pb-2 text-xs font-medium scrollbar-none" id="category-filters">
+      <button onclick="selectCategory('todos', this)" class="cat-btn bg-brand text-white px-4 py-2 rounded-full whitespace-nowrap shadow-sm border border-brand">Todos os Produtos</button>
+      <button onclick="selectCategory('mais_vendidos', this)" class="cat-btn bg-white text-gray-600 hover:bg-brand-light px-4 py-2 rounded-full border border-gray-200 whitespace-nowrap flex items-center gap-1">🏆 Mais Vendidos</button>
+      <button onclick="selectCategory('pijamas', this)" class="cat-btn bg-white text-gray-600 hover:bg-brand-light px-4 py-2 rounded-full border border-gray-200 whitespace-nowrap">Pijamas & Babydoll</button>
+      <button onclick="selectCategory('calcinhas', this)" class="cat-btn bg-white text-gray-600 hover:bg-brand-light px-4 py-2 rounded-full border border-gray-200 whitespace-nowrap">Calcinhas Sem Costura</button>
+      <button onclick="selectCategory('lingerie', this)" class="cat-btn bg-white text-gray-600 hover:bg-brand-light px-4 py-2 rounded-full border border-gray-200 whitespace-nowrap">Lingerie</button>
+    </div>
+  </div>
+
+  <!-- Vitrine Geral -->
+  <main class="max-w-6xl mx-auto px-4 py-4">
+    <div id="no-results" class="hidden text-center py-12 text-gray-500 text-sm">
+      <p class="font-bold text-gray-700 text-base mb-1">Nenhum produto encontrado 😞</p>
+      <p>Tente buscar por outro termo ou selecione outra categoria.</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="product-grid"></div>
+  </main>
+
+  <!-- Modal Carrinho -->
+  <div id="cart-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div class="bg-white w-full max-w-md rounded-2xl p-6 shadow-xl relative flex flex-col max-h-[90vh]">
+      <div class="flex justify-between items-center mb-4 border-b pb-3">
+        <h3 class="text-xl font-bold text-gray-900 font-serif">Seu Carrinho</h3>
+        <button onclick="toggleCart()" class="text-gray-400 hover:text-gray-600 font-bold text-xl">&times;</button>
+      </div>
+
+      <div class="mb-4 bg-rose-50/60 p-3 rounded-xl border border-rose-100 text-xs">
+        <span class="font-bold text-gray-800 block mb-1">Como deseja receber seu pedido?</span>
+        <div class="flex gap-4">
+          <label class="flex items-center gap-1.5 cursor-pointer">
+            <input type="radio" name="delivery_type" value="Retirar na Loja" checked class="text-brand accent-brand" />
+            <span>Retirar na Loja</span>
+          </label>
+          <label class="flex items-center gap-1.5 cursor-pointer">
+            <input type="radio" name="delivery_type" value="Envio via Correios" class="text-brand accent-brand" />
+            <span>Envio via Correios</span>
+          </label>
+        </div>
+      </div>
+
+      <div id="cart-items" class="space-y-3 overflow-y-auto mb-4 text-xs flex-grow pr-1"></div>
+
+      <div class="border-t pt-4 flex justify-between items-center font-bold text-base mb-6">
+        <span>Total:</span>
+        <span id="cart-total" class="text-brand text-lg">R$ 0,00</span>
+      </div>
+
+      <div class="flex gap-2">
+        <button onclick="toggleCart()" class="w-1/2 bg-gray-100 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-200 transition text-xs">
+          Continuar Comprando
+        </button>
+        <button onclick="checkout()" class="w-1/2 bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition flex items-center justify-center gap-1 text-xs shadow-md">
+          <span>Enviar p/ WhatsApp</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notice -->
+  <div id="toast-added" class="fixed bottom-5 right-5 bg-brand text-white px-4 py-3 rounded-xl shadow-lg text-xs flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300 z-40">
+    <span>Item adicionado ao carrinho!</span>
+    <button onclick="toggleCart()" class="underline font-bold text-rose-200">Ver Carrinho</button>
+  </div>
+
+  <!-- LÓGICA E DADOS DO SITE (TUDO EM UM ÚNICO ARQUIVO) -->
+  <script>
+    // =========================================================================
+    // 🛍️ CADASTRO DE PRODUTOS
+    // =========================================================================
+    // • promo: true (Aparece no carrossel superior de Ofertas)
+    // • bestseller: true (Aparece na categoria "Mais Vendidos" e ganha selo)
+    // =========================================================================
+
+// =========================================================================
+// ⚙️ CONFIGURAÇÃO — troque pelos seus dados
+// =========================================================================
+// 1. Número do WhatsApp que vai receber os pedidos (com DDI+DDD, só números)
+const WHATSAPP_NUMERO = "5561998428280";
+
+// 2. Link da planilha Google publicada como CSV (Arquivo > Compartilhar >
+//    Publicar na Web > selecionar a aba de produtos > formato CSV).
+//    Deixe em branco ("") para usar os produtos de exemplo abaixo.
+const PLANILHA_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRwbJeFEjtjiy-f51dKnF8GDbPUBHEb-EVWPINAa82nplJ29HcOHtGAQjM9ohAXBdGIFByIKjHQBkcy/pub?gid=0&single=true&output=csv";
+
+// =========================================================================
+// 🛍️ PRODUTOS DE EXEMPLO (usados só se PLANILHA_CSV_URL estiver vazio)
+// =========================================================================
+let products = [
+  {
+    id: 1,
+    title: "Pijama Regata Rosa Corações",
+    category: "pijamas",
+    price: 119.90,
+    oldPrice: 145.00,
+    promo: true,
+    promoTag: "20% OFF",
+    bestseller: true,
+    description: "Confeccionado em algodão canelado super macio com estampa delicada de corações.",
+    sizes: ["M", "G"],
+    colors: [
+      { name: "Rosa Chiclete", hex: "#f9a8d4", mediaType: "img", mediaSrc: "pijama_rosa_coracoes.jpg" },
+      { name: "Vinho Bordô", hex: "#7A122C", mediaType: "img", mediaSrc: "pijama_rosa_detalhe.jpg" }
+    ]
+  },
+  {
+    id: 2,
+    title: "Pijama Capri Floral Azul",
+    category: "pijamas",
+    price: 149.90,
+    oldPrice: 183.00,
+    promo: true,
+    promoTag: "OFERTA",
+    bestseller: false,
+    description: "Algodão leve e confortável com regata azul e detalhe em renda no decote V.",
+    sizes: ["G", "GG"],
+    colors: [
+      { name: "Azul Floral", hex: "#38bdf8", mediaType: "img", mediaSrc: "pijama_capri_floral.jpg" }
+    ]
+  },
+  {
+    id: 3,
+    title: "Babydoll Seta de Cetim Liso",
+    category: "pijamas",
+    price: 89.90,
+    promo: false,
+    bestseller: true,
+    description: "Conjunto em cetim leve com toque de seda e alças reguláveis com acabamento sofisticado.",
+    sizes: ["P", "M", "G"],
+    colors: [
+      { name: "Preto Nobre", hex: "#000000", mediaType: "img", mediaSrc: "babydoll_preto.jpg" },
+      { name: "Off-White", hex: "#fafafa", mediaType: "img", mediaSrc: "babydoll_white.jpg" }
+    ]
+  },
+  {
+    id: 4,
+    title: "Pijama Americano Longo Botões",
+    category: "pijamas",
+    price: 169.90,
+    oldPrice: 199.90,
+    promo: true,
+    promoTag: "DESTAQUE",
+    bestseller: true,
+    description: "Estilo gola colarinho clássico com vivo contrastante. Tecido viscolycra ultra aconchegante.",
+    sizes: ["P", "M", "G", "GG"],
+    colors: [
+      { name: "Marinho Clássico", hex: "#1e3a8a", mediaType: "img", mediaSrc: "americano_marinho.jpg" },
+      { name: "Cinza Mescla", hex: "#9ca3af", mediaType: "img", mediaSrc: "americano_cinza.jpg" }
+    ]
+  },
+  {
+    id: 5,
+    title: "Shortdoll Viscose Poá Delicado",
+    category: "pijamas",
+    price: 79.90,
+    promo: false,
+    bestseller: false,
+    description: "Modelagem soltinha e fresca em viscose com estampa atemporal de bolinhas.",
+    sizes: ["M", "G"],
+    colors: [
+      { name: "Rosê Poá", hex: "#fda4af", mediaType: "img", mediaSrc: "poa_rose.jpg" }
+    ]
+  },
+  {
+    id: 6,
+    title: "Pijama Curto Soft Nuvem",
+    category: "pijamas",
+    price: 109.90,
+    promo: false,
+    bestseller: true,
+    description: "Toque aveludado e caimento perfeito. Ideal para noites de descanso com conforto máximo.",
+    sizes: ["P", "M", "G"],
+    colors: [
+      { name: "Menta Fresco", hex: "#6ee7b7", mediaType: "img", mediaSrc: "pijama_menta.jpg" },
+      { name: "Lilás Suave", hex: "#c084fc", mediaType: "img", mediaSrc: "pijama_lilas.jpg" }
+    ]
+  },
+  {
+    id: 7,
+    title: "Babydoll Renda Francesa Sedução",
+    category: "pijamas",
+    price: 99.90,
+    oldPrice: 129.90,
+    promo: true,
+    promoTag: "IMPERDÍVEL",
+    bestseller: false,
+    description: "Decote trançado e detalhes transparentes em renda macia que não pinica.",
+    sizes: ["M", "G", "GG"],
+    colors: [
+      { name: "Vinho Profundo", hex: "#7A122C", mediaType: "img", mediaSrc: "renda_vinho.jpg" }
+    ]
+  },
+  {
+    id: 8,
+    title: "Pijama Manga Longa Modal Confort",
+    category: "pijamas",
+    price: 189.90,
+    promo: false,
+    bestseller: false,
+    description: "Tecido modal respirável e térmico, garantindo noites com a temperatura ideal.",
+    sizes: ["P", "M", "G", "GG"],
+    colors: [
+      { name: "Beige Natural", hex: "#d6c0b3", mediaType: "img", mediaSrc: "modal_beige.jpg" }
+    ]
+  },
+  {
+    id: 9,
+    title: "Shortdoll Verão Algodão Premium",
+    category: "pijamas",
+    price: 69.90,
+    promo: false,
+    bestseller: true,
+    description: "Algodão 100% hipoalergênico e elástico suave no cós que não aperta a cintura.",
+    sizes: ["P", "M", "G"],
+    colors: [
+      { name: "Amarelo Pastel", hex: "#fef08a", mediaType: "img", mediaSrc: "verao_amarelo.jpg" },
+      { name: "Coral Vivo", hex: "#fb7185", mediaType: "img", mediaSrc: "verao_coral.jpg" }
+    ]
+  },
+  {
+    id: 10,
+    title: "Pijama Macacão Regata Conforto",
+    category: "pijamas",
+    price: 139.90,
+    promo: false,
+    bestseller: false,
+    description: "Peça única prática em viscolycra com cordão de ajuste na cintura.",
+    sizes: ["M", "G"],
+    colors: [
+      { name: "Preto Sólido", hex: "#000000", mediaType: "img", mediaSrc: "macacao_preto.jpg" }
+    ]
+  },
+  {
+    id: 11,
+    title: "Robe Curto Cetim com Renda nas Mangas",
+    category: "pijamas",
+    price: 119.90,
+    oldPrice: 149.90,
+    promo: true,
+    promoTag: "PROMO LINGERIE",
+    bestseller: true,
+    description: "Sobretudo leve com faixa de amarração ajustável e acabamento luxuoso nas mangas.",
+    sizes: ["Único (P ao G)"],
+    colors: [
+      { name: "Branco Noiva", hex: "#ffffff", mediaType: "img", mediaSrc: "robe_noiva.jpg" },
+      { name: "Rosê Gold", hex: "#f43f5e", mediaType: "img", mediaSrc: "robe_rose.jpg" }
+    ]
+  },
+  {
+    id: 12,
+    title: "Babydoll Tule Transparente & Renda",
+    category: "pijamas",
+    price: 94.90,
+    promo: false,
+    bestseller: false,
+    description: "Transparência sutil com bojo forrado e calcinha fio inclusa no conjunto.",
+    sizes: ["P", "M", "G"],
+    colors: [
+      { name: "Vermelho Paixão", hex: "#dc2626", mediaType: "img", mediaSrc: "tule_vermelho.jpg" }
+    ]
+  },
+  {
+    id: 13,
+    title: "Pijama Capri Estampa Botânica",
+    category: "pijamas",
+    price: 134.90,
+    promo: false,
+    bestseller: false,
+    description: "Modelagem meia perna muito charmosa com estampa de folhagens exclusivas.",
+    sizes: ["M", "G", "GG"],
+    colors: [
+      { name: "Verde Oliva", hex: "#65a30d", mediaType: "img", mediaSrc: "botanica_verde.jpg" }
+    ]
+  },
+  {
+    id: 14,
+    title: "Shortdoll Camiseta Regata & Short",
+    category: "pijamas",
+    price: 59.90,
+    promo: false,
+    bestseller: true,
+    description: "O básico indispensável para o dia a dia. Algodão leve e de secagem rápida.",
+    sizes: ["P", "M", "G"],
+    colors: [
+      { name: "Cinza Chumbo", hex: "#4b5563", mediaType: "img", mediaSrc: "basico_chumbo.jpg" }
+    ]
+  },
+  {
+    id: 15,
+    title: "Pijama Americano Curto Listrado",
+    category: "pijamas",
+    price: 129.90,
+    promo: false,
+    bestseller: false,
+    description: "Estampa listrada minimalista, com botões funcionais perfeitos para amamentação.",
+    sizes: ["P", "M", "G", "GG"],
+    colors: [
+      { name: "Azul Listrado", hex: "#60a5fa", mediaType: "img", mediaSrc: "americano_listrado.jpg" }
+    ]
+  },
+
+  // --- CALCINHAS SEM COSTURA & BÁSICAS ---
+  {
+    id: 16,
+    title: "Calcinha Sem Costura (Corte a Laser)",
+    category: "calcinhas",
+    price: 31.90,
+    promo: false,
+    bestseller: true,
+    description: "Tanga média sem costura que não marca na roupa, fundo 100% algodão.",
+    sizes: ["M", "G"],
+    colors: [
+      { name: "Nude", hex: "#E5C3A6", mediaType: "img", mediaSrc: "kit_calcinhas.jpg" },
+      { name: "Preta", hex: "#000000", mediaType: "img", mediaSrc: "calcinha_preta.jpg" }
+    ]
+  },
+  {
+    id: 17,
+    title: "Kit 3 Calcinhas Cós Alto Modeladora",
+    category: "calcinhas",
+    price: 89.90,
+    oldPrice: 110.00,
+    promo: true,
+    promoTag: "KIT ECONOMIA",
+    bestseller: true,
+    description: "Compressão leve na medida certa que abraça a cintura sem enrolar.",
+    sizes: ["M", "G", "GG"],
+    colors: [
+      { name: "Trio Básico (Nude/Preto/Branco)", hex: "#d1d5db", mediaType: "img", mediaSrc: "kit_cos_alto.jpg" }
+    ]
+  },
+  {
+    id: 18,
+    title: "Calcinha Fio Dental Microfibra Ultra Light",
+    category: "calcinhas",
+    price: 24.90,
+    promo: false,
+    bestseller: false,
+    description: "Toque aveludado e laterais finas ajustáveis com elástico macio.",
+    sizes: ["P", "M", "G"],
+    colors: [
+      { name: "Vinho", hex: "#7A122C", mediaType: "img", mediaSrc: "fio_vinho.jpg" },
+      { name: "Terracota", hex: "#9a3412", mediaType: "img", mediaSrc: "fio_terracota.jpg" }
+    ]
+  },
+  {
+    id: 19,
+    title: "Calcinha Biquíni Renda Total",
+    category: "calcinhas",
+    price: 29.90,
+    promo: false,
+    bestseller: false,
+    description: "Confeccionada inteiramente em renda com elastano para maior conforto.",
+    sizes: ["P", "M", "G"],
+    colors: [
+      { name: "Romance Rosa", hex: "#f472b6", mediaType: "img", mediaSrc: "renda_rosa.jpg" }
+    ]
+  },
+  {
+    id: 20,
+    title: "Calcinha Boyshort Shortinho Sem Costura",
+    category: "calcinhas",
+    price: 36.90,
+    promo: false,
+    bestseller: true,
+    description: "Estilo shortinho anatômico que previne o atrito entre as pernas sob vestidos.",
+    sizes: ["M", "G", "GG"],
+    colors: [
+      { name: "Bege Neutro", hex: "#fde047", mediaType: "img", mediaSrc: "shortinho_bege.jpg" },
+      { name: "Preto", hex: "#000000", mediaType: "img", mediaSrc: "shortinho_preto.jpg" }
+    ]
+  },
+  {
+    id: 21,
+    title: "Calcinha Tangão Confort algodão 100%",
+    category: "calcinhas",
+    price: 27.90,
+    promo: false,
+    bestseller: false,
+    description: "Laterais largas e cobertura total no bumbum para o dia a dia e gestantes.",
+    sizes: ["G", "GG", "XGG"],
+    colors: [
+      { name: "Cinza Mescla", hex: "#9ca3af", mediaType: "img", mediaSrc: "tangao_cinza.jpg" }
+    ]
+  },
+  {
+    id: 22,
+    title: "Calcinha Fio Duplo Microfibra",
+    category: "calcinhas",
+    price: 28.90,
+    promo: false,
+    bestseller: true,
+    description: "Tecido duplo no bumbum sem costura aparente. Máxima discrição com roupas de ginástica.",
+    sizes: ["P", "M", "G"],
+    colors: [
+      { name: "Nude Rosado", hex: "#fecdd3", mediaType: "img", mediaSrc: "fio_duplo_nude.jpg" }
+    ]
+  },
+  {
+    id: 23,
+    title: "Kit 5 Calcinhas Tanga Algodão Doce",
+    category: "calcinhas",
+    price: 109.90,
+    oldPrice: 139.90,
+    promo: true,
+    promoTag: "LEVE 5",
+    bestseller: true,
+    description: "Cores sortidas em algodão penteado respirável com elástico suave na cintura.",
+    sizes: ["P", "M", "G"],
+    colors: [
+      { name: "Cores Pastéis Sortidas", hex: "#a7f3d0", mediaType: "img", mediaSrc: "kit5_algodao.jpg" }
+    ]
+  },
+  {
+    id: 24,
+    title: "Calcinha Fio Renda com Tiras Strappy",
+    category: "calcinhas",
+    price: 34.90,
+    promo: false,
+    bestseller: false,
+    description: "Detalhes de tiras cruzadas nas laterais para um visual moderno e sensual.",
+    sizes: ["P", "M", "G"],
+    colors: [
+      { name: "Preta", hex: "#000000", mediaType: "img", mediaSrc: "strappy_preta.jpg" }
+    ]
+  },
+  {
+    id: 25,
+    title: "Calcinha Lipo Compressão Cós Alto",
+    category: "calcinhas",
+    price: 49.90,
+    promo: false,
+    bestseller: true,
+    description: "Painel frontal duplo de média compressão para modelar o abdômen sem incômodos.",
+    sizes: ["M", "G", "GG"],
+    colors: [
+      { name: "Bege Pele", hex: "#e5e7eb", mediaType: "img", mediaSrc: "lipo_bege.jpg" }
+    ]
+  },
+  {
+    id: 26,
+    title: "Calcinha Biquíni Costura Invisível",
+    category: "calcinhas",
+    price: 32.90,
+    promo: false,
+    bestseller: false,
+    description: "Acabamento colado termicamente que garante zera marcação sob legging.",
+    sizes: ["M", "G"],
+    colors: [
+      { name: "Lilás Pastel", hex: "#e9d5ff", mediaType: "img", mediaSrc: "invisivel_lilas.jpg" }
+    ]
+  },
+  {
+    id: 27,
+    title: "Calcinha Fio Renda Larga Confort",
+    category: "calcinhas",
+    price: 33.90,
+    promo: false,
+    bestseller: false,
+    description: "Cós em renda ancha que não dobra e proporciona excelente sustentação.",
+    sizes: ["M", "G", "GG"],
+    colors: [
+      { name: "Vinho Bordo", hex: "#7A122C", mediaType: "img", mediaSrc: "fio_larga_vinho.jpg" }
+    ]
+  },
+  {
+    id: 28,
+    title: "Calcinha Tanga Algodão Bio Sustentável",
+    category: "calcinhas",
+    price: 26.90,
+    promo: false,
+    bestseller: false,
+    description: "Algodão orgânico certificado, perfeito para peles sensíveis ou alérgicas.",
+    sizes: ["P", "M", "G"],
+    colors: [
+      { name: "Crudo Natural", hex: "#fef3c7", mediaType: "img", mediaSrc: "bio_crudo.jpg" }
+    ]
+  },
+
+  // --- LINGERIES & CONJUNTOS ---
+  {
+    id: 29,
+    title: "Sutiã Refforço com Renda & Bojo Structural",
+    category: "lingerie",
+    price: 89.90,
+    oldPrice: 119.90,
+    promo: true,
+    promoTag: "OFERTA",
+    bestseller: true,
+    description: "Laterais largas que acomodam o corpo perfeitamente e reduzem marcas nas costas.",
+    sizes: ["42", "44", "46", "48"],
+    colors: [
+      { name: "Vinho Elegância", hex: "#7A122C", mediaType: "img", mediaSrc: "sutia_vinho.jpg" },
+      { name: "Preto Essencial", hex: "#000000", mediaType: "img", mediaSrc: "sutia_preto.jpg" }
+    ]
+  },
+  {
+    id: 30,
+    title: "Conjunto Lingerie Renda Floral sem Bojo",
+    category: "lingerie",
+    price: 129.90,
+    promo: false,
+    bestseller: true,
+    description: "Sutiã estilo cropped em renda com aro de sustentação e calcinha fio combinando.",
+    sizes: ["P", "M", "G"],
+    colors: [
+      { name: "Vermelho Rubi", hex: "#b91c1c", mediaType: "img", mediaSrc: "conjunto_rubi.jpg" }
+    ]
+  },
+  {
+    id: 31,
+    title: "Sutiã Tomara que Caia Multiformas",
+    category: "lingerie",
+    price: 94.90,
+    promo: false,
+    bestseller: false,
+    description: "Acompanha alças removíveis. Silicone interno nas laterais para fixação perfeita.",
+    sizes: ["40", "42", "44", "46"],
+    colors: [
+      { name: "Nude Médio", hex: "#d4a373", mediaType: "img", mediaSrc: "tomara_nude.jpg" }
+    ]
+  },
+  {
+    id: 32,
+    title: "Body Renda Manga Longa Transparente",
+    category: "lingerie",
+    price: 149.90,
+    oldPrice: 189.90,
+    promo: true,
+    promoTag: "20% OFF",
+    bestseller: true,
+    description: "Pode ser usado como lingerie ou peça de moda para compor looks de noite.",
+    sizes: ["P", "M", "G"],
+    colors: [
+      { name: "Preto", hex: "#000000", mediaType: "img", mediaSrc: "body_manga_preto.jpg" }
+    ]
+  },
+  {
+    id: 33,
+    title: "Conjunto Sem Costura Bralette Confort",
+    category: "lingerie",
+    price: 89.90,
+    promo: false,
+    bestseller: true,
+    description: "Top estilo cropped sem aro e calcinha sem costura. O ápice do conforto diário.",
+    sizes: ["M", "G"],
+    colors: [
+      { name: "Verde Menta", hex: "#a7f3d0", mediaType: "img", mediaSrc: "bralette_menta.jpg" },
+      { name: "Nude", hex: "#e5e7eb", mediaType: "img", mediaSrc: "bralette_nude.jpg" }
+    ]
+  },
+  {
+    id: 34,
+    title: "Sutiã Invisível Adesivo de Silicone",
+    category: "lingerie",
+    price: 45.90,
+    promo: false,
+    bestseller: false,
+    description: "Aderência duradoura lavável e reutilizável. Perfeito para decotes profundos e costas nuas.",
+    sizes: ["P", "M", "G"],
+    colors: [
+      { name: "Nude Único", hex: "#fed7aa", mediaType: "img", mediaSrc: "adesivo_nude.jpg" }
+    ]
+  },
+  {
+    id: 35,
+    title: "Conjunto Corset Renda com Barbatanas",
+    category: "lingerie",
+    price: 179.90,
+    oldPrice: 219.90,
+    promo: true,
+    promoTag: "SUPER OFERTA",
+    bestseller: false,
+    description: "Estrutura que acentua as curvas com detalhes de amarração acetinados.",
+    sizes: ["P", "M", "G"],
+    colors: [
+      { name: "Preto Luxo", hex: "#000000", mediaType: "img", mediaSrc: "corset_preto.jpg" }
+    ]
+  },
+  {
+    id: 36,
+    title: "Sutiã Amamentação Renda com Abertura Click",
+    category: "lingerie",
+    price: 79.90,
+    promo: false,
+    bestseller: true,
+    description: "Abertura frontal prática com uma mão só e renda macia que preserva a auto estima da mamãe.",
+    sizes: ["42", "44", "46", "48"],
+    colors: [
+      { name: "Rosa Bebê", hex: "#fbcfe8", mediaType: "img", mediaSrc: "amamentacao_rosa.jpg" },
+      { name: "Preto", hex: "#000000", mediaType: "img", mediaSrc: "amamentacao_preto.jpg" }
+    ]
+  },
+  {
+    id: 37,
+    title: "Body Renda Regata sem Bojo com Fecho",
+    category: "lingerie",
+    price: 119.90,
+    promo: false,
+    bestseller: false,
+    description: "Fecho inferior com 3 regulagens. Renda elástica de toque extra suave na pele.",
+    sizes: ["M", "G", "GG"],
+    colors: [
+      { name: "Branco", hex: "#ffffff", mediaType: "img", mediaSrc: "body_branco.jpg" }
+    ]
+  },
+  {
+    id: 38,
+    title: "Sutiã Nadador Costas Renda",
+    category: "lingerie",
+    price: 69.90,
+    promo: false,
+    bestseller: false,
+    description: "Fechamento frontal rápido e detalhes anatômicos em renda nas costas.",
+    sizes: ["40", "42", "44"],
+    colors: [
+      { name: "Bordô", hex: "#7A122C", mediaType: "img", mediaSrc: "nadador_bordo.jpg" }
+    ]
+  },
+  {
+    id: 39,
+    title: "Conjunto Lingerie Tiras Strappy V",
+    category: "lingerie",
+    price: 139.90,
+    promo: false,
+    bestseller: false,
+    description: "Design arrojado com tiras geométricas no decote e cintura alta rendada.",
+    sizes: ["P", "M", "G"],
+    colors: [
+      { name: "Preto Sedução", hex: "#000000", mediaType: "img", mediaSrc: "strappy_conjunto.jpg" }
+    ]
+  },
+  {
+    id: 40,
+    title: "Sutiã Top Triângulo Renda Sem Aro",
+    category: "lingerie",
+    price: 59.90,
+    promo: false,
+    bestseller: false,
+    description: "Comfy e leve! Aquele modelo delicado para quem odeia estruturas rígidas.",
+    sizes: ["P", "M", "G"],
+    colors: [
+      { name: "Azul Serenity", hex: "#bfdbfe", mediaType: "img", mediaSrc: "triangulo_azul.jpg" }
+    ]
+  },
+  {
+    id: 41,
+    title: "Conjunto Lingerie Satim & Renda Bicolor",
+    category: "lingerie",
+    price: 119.90,
+    promo: false,
+    bestseller: false,
+    description: "Combinação sofisticada entre o brilho do cetim e o contraste da renda preta.",
+    sizes: ["M", "G"],
+    colors: [
+      { name: "Champagne / Preto", hex: "#fef08a", mediaType: "img", mediaSrc: "bicolor_champagne.jpg" }
+    ]
+  },
+  {
+    id: 42,
+    title: "Cinta Liga Renda Ajustável Luxo",
+    category: "lingerie",
+    price: 49.90,
+    promo: false,
+    bestseller: false,
+    description: "Presilhas resistentes com reguladores metálicos dourados. Não acompanha meias.",
+    sizes: ["P/M", "G/GG"],
+    colors: [
+      { name: "Preto", hex: "#000000", mediaType: "img", mediaSrc: "cinta_liga_preto.jpg" },
+      { name: "Vermelho", hex: "#dc2626", mediaType: "img", mediaSrc: "cinta_liga_vermelho.jpg" }
+    ]
+  },
+  {
+    id: 43,
+    title: "Sutiã Anatomic Push Up Aumenta Seios",
+    category: "lingerie",
+    price: 84.90,
+    promo: false,
+    bestseller: true,
+    description: "Bojo bolha interno que aproxima e aumenta visualmente o volume do busto.",
+    sizes: ["40", "42", "44"],
+    colors: [
+      { name: "Nude Clássico", hex: "#fde047", mediaType: "img", mediaSrc: "pushup_nude.jpg" }
+    ]
+  },
+  {
+    id: 44,
+    title: "Conjunto Bralette Cropped Renda Neon",
+    category: "lingerie",
+    price: 99.90,
+    oldPrice: 129.90,
+    promo: true,
+    promoTag: "OFERTA",
+    bestseller: false,
+    description: "Cores vibrantes para mostrar sob transparências e regatas cavadas.",
+    sizes: ["P", "M", "G"],
+    colors: [
+      { name: "Pink Neon", hex: "#f43f5e", mediaType: "img", mediaSrc: "neon_pink.jpg" }
+    ]
+  },
+  {
+    id: 45,
+    title: "Sutiã plus size Renda Sustentação Total",
+    category: "lingerie",
+    price: 99.90,
+    promo: false,
+    bestseller: true,
+    description: "Alças largas almofadadas para aliviar a pressão nos ombros.",
+    sizes: ["48", "50", "52"],
+    colors: [
+      { name: "Preto", hex: "#000000", mediaType: "img", mediaSrc: "plus_preto.jpg" },
+      { name: "Bege", hex: "#e5e7eb", mediaType: "img", mediaSrc: "plus_bege.jpg" }
+    ]
+  },
+  {
+    id: 46,
+    title: "Body Tule e Veludo Geométrico",
+    category: "lingerie",
+    price: 159.90,
+    promo: false,
+    bestseller: false,
+    description: "Aplicações de veludo tátil sobre tule transparente. Uma peça de arte.",
+    sizes: ["M", "G"],
+    colors: [
+      { name: "Preto Noite", hex: "#000000", mediaType: "img", mediaSrc: "body_veludo.jpg" }
+    ]
+  },
+  {
+    id: 47,
+    title: "Conjunto Sem Bojo Renda Cílios",
+    category: "lingerie",
+    price: 109.90,
+    promo: false,
+    bestseller: false,
+    description: "Acabamento delicado em Renda Chantilly com barrado em cílios no decote.",
+    sizes: ["P", "M", "G"],
+    colors: [
+      { name: "Branco Off", hex: "#fafafa", mediaType: "img", mediaSrc: "chantilly_off.jpg" }
+    ]
+  },
+  {
+    id: 48,
+    title: "Sutiã Base Larga Renda com Glitter",
+    category: "lingerie",
+    price: 89.90,
+    promo: false,
+    bestseller: false,
+    description: "Renda especial com fios sutis de lurex que dão um brilho delicado.",
+    sizes: ["42", "44", "46"],
+    colors: [
+      { name: "Rosê Brilho", hex: "#f472b6", mediaType: "img", mediaSrc: "glitter_rose.jpg" }
+    ]
+  },
+  {
+    id: 49,
+    title: "Protetor de Mamilos em Silicone Flor",
+    category: "lingerie",
+    price: 22.90,
+    promo: false,
+    bestseller: true,
+    description: "Super fino, reutilizável e totalmente imperceptível sob roupas finas.",
+    sizes: ["Tamanho Único"],
+    colors: [
+      { name: "Pele", hex: "#fed7aa", mediaType: "img", mediaSrc: "flor_pele.jpg" }
+    ]
+  },
+  {
+    id: 50,
+    title: "Conjunto Romance Bodysuit & Calcinha",
+    category: "lingerie",
+    price: 139.90,
+    oldPrice: 169.90,
+    promo: true,
+    promoTag: "DESTAQUE",
+    bestseller: true,
+    description: "Modela com delicadeza. Detalhes de laço de cetim no centro do peito.",
+    sizes: ["P", "M", "G"],
+    colors: [
+      { name: "Vinho Sensual", hex: "#7A122C", mediaType: "img", mediaSrc: "romance_vinho.jpg" }
+    ]
+  }
+];
+
+
+    // Estados da Aplicação
+    let cart = JSON.parse(localStorage.getItem('carrinho_dc') || '[]');
+    let selectedSizes = {};
+    let selectedColors = {};
+    let activeCategory = 'todos';
+
+    // =========================================================================
+    // 📊 CARREGAMENTO DOS PRODUTOS (via planilha Google, se configurada)
+    // =========================================================================
+    function normalizarBool(valor) {
+      return String(valor || '').trim().toLowerCase() === 'sim';
+    }
+
+    async function carregarProdutosDaPlanilha(url) {
+      const resposta = await fetch(url);
+      const textoCsv = await resposta.text();
+      const resultado = Papa.parse(textoCsv, { header: true, skipEmptyLines: true });
+
+      const agrupados = {};
+      resultado.data.forEach(linha => {
+        const id = (linha.id || '').trim();
+        if (!id) return;
+
+        if (!agrupados[id]) {
+          agrupados[id] = {
+            id: id,
+            title: linha.titulo || 'Produto sem nome',
+            category: (linha.categoria || '').trim(),
+            price: parseFloat((linha.preco || '0').replace(',', '.')) || 0,
+            oldPrice: linha.preco_antigo ? (parseFloat(linha.preco_antigo.replace(',', '.')) || null) : null,
+            promo: normalizarBool(linha.promo),
+            promoTag: linha.promo_tag || '',
+            bestseller: normalizarBool(linha.bestseller),
+            description: linha.descricao || '',
+            sizes: (linha.tamanhos || '').split(',').map(s => s.trim()).filter(Boolean),
+            colors: []
+          };
+        }
+
+        agrupados[id].colors.push({
+          name: linha.cor_nome || 'Padrão',
+          hex: linha.cor_hex || '#cccccc',
+          mediaType: String(linha.midia_tipo || 'foto').toLowerCase() === 'video' ? 'video' : 'img',
+          mediaSrc: linha.midia_url || '',
+          disponivel: linha.disponivel === undefined || linha.disponivel === '' ? true : normalizarBool(linha.disponivel)
+        });
+      });
+
+      return Object.values(agrupados);
+    }
+
+    async function inicializarProdutos() {
+      if (PLANILHA_CSV_URL && PLANILHA_CSV_URL.trim() !== '') {
+        try {
+          products = await carregarProdutosDaPlanilha(PLANILHA_CSV_URL);
+        } catch (erro) {
+          console.error('Erro ao carregar a planilha de produtos:', erro);
+          document.getElementById('product-grid').innerHTML =
+            '<p class="col-span-full text-center text-red-500 text-sm py-10">Não foi possível carregar o catálogo agora. Tente novamente em instantes.</p>';
+          return;
+        }
+      }
+
+      products.forEach(p => {
+        if (p.colors && p.colors.length > 0) {
+          selectedColors[p.id] = p.colors.find(c => c.disponivel !== false) || p.colors[0];
+        }
+      });
+      renderPromotions();
+      renderProducts();
+      updateCart();
+    }
+
+    document.addEventListener("DOMContentLoaded", inicializarProdutos);
+
+    // 1. CARROSSEL DE PROMOÇÕES
+    function renderPromotions() {
+      const container = document.getElementById('promo-container');
+      const section = document.getElementById('promo-section');
+      const promoProducts = products.filter(p => p.promo === true);
+
+      if (promoProducts.length === 0) {
+        section.classList.add('hidden');
+        return;
+      }
+
+      container.innerHTML = promoProducts.map(product => {
+        const currentColor = selectedColors[product.id] || product.colors[0];
+        return `
+          <div class="min-w-[280px] sm:min-w-[320px] max-w-[320px] bg-white rounded-2xl border-2 border-rose-200 p-3 shadow-sm snap-start relative flex flex-col">
+            <span class="absolute top-5 left-5 bg-red-600 text-white font-bold text-[10px] px-2.5 py-1 rounded-full z-10 uppercase tracking-wider shadow">
+              ${product.promoTag || 'PROMOÇÃO'}
+            </span>
+            
+            <div class="h-48 bg-rose-50/50 rounded-xl overflow-hidden mb-3 relative flex items-center justify-center">
+              ${renderMediaHtml(currentColor.mediaType, currentColor.mediaSrc, product.title)}
+            </div>
+
+            <h4 class="font-bold text-gray-800 text-sm mb-1 truncate">${product.title}</h4>
+            
+            <div class="flex items-baseline gap-2 mb-3">
+              <span class="text-lg font-bold text-red-600">R$ ${product.price.toFixed(2).replace('.', ',')}</span>
+              ${product.oldPrice ? `<span class="text-xs text-gray-400 line-through">R$ ${product.oldPrice.toFixed(2).replace('.', ',')}</span>` : ''}
+            </div>
+
+            <button onclick="scrollToProduct(${product.id})" class="w-full mt-auto bg-brand-light text-brand hover:bg-brand hover:text-white transition font-bold py-2 rounded-xl text-xs border border-rose-200">
+              Ver Detalhes / Comprar
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function scrollPromo(direction) {
+      const container = document.getElementById('promo-container');
+      container.scrollBy({ left: direction * 300, behavior: 'smooth' });
+    }
+
+    function scrollToProduct(productId) {
+      const el = document.getElementById(`product-card-${productId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('ring-2', 'ring-brand');
+        setTimeout(() => el.classList.remove('ring-2', 'ring-brand'), 2000);
+      }
+    }
+
+    // 2. VITRINE GERAL
+    function renderProducts() {
+      const grid = document.getElementById('product-grid');
+      const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+      grid.innerHTML = '';
+
+      let visibleCount = 0;
+
+      products.forEach(product => {
+        // Lógica para filtro de categoria + Mais Vendidos
+        let matchesCategory = false;
+        if (activeCategory === 'todos') {
+          matchesCategory = true;
+        } else if (activeCategory === 'mais_vendidos') {
+          matchesCategory = product.bestseller === true;
+        } else {
+          matchesCategory = (product.category === activeCategory);
+        }
+
+        const searchTarget = `${product.title} ${product.description} ${product.colors.map(c => c.name).join(' ')}`.toLowerCase();
+        const matchesSearch = searchTerm === '' || searchTarget.includes(searchTerm);
+
+        if (matchesCategory && matchesSearch) {
+          visibleCount++;
+          const currentSelectedColor = selectedColors[product.id] || product.colors[0];
+          
+          grid.innerHTML += `
+            <div id="product-card-${product.id}" class="product-card bg-white rounded-2xl border border-rose-100 overflow-hidden hover:shadow-md transition flex flex-col relative">
+              
+              <!-- Selo Mais Vendido -->
+              ${product.bestseller ? `
+                <span class="absolute top-4 left-4 bg-amber-500 text-white font-bold text-[10px] px-2.5 py-1 rounded-full z-10 uppercase shadow-sm flex items-center gap-1">
+                  🏆 Mais Vendido
+                </span>
+              ` : ''}
+
+              <!-- Foto Vinculada à Cor -->
+              <div class="h-72 bg-rose-50/50 relative overflow-hidden flex flex-col justify-between p-2">
+                <div class="w-full h-full rounded-xl overflow-hidden relative bg-white flex items-center justify-center" id="media-container-${product.id}">
+                  ${renderMediaHtml(currentSelectedColor.mediaType, currentSelectedColor.mediaSrc, product.title)}
+                </div>
+              </div>
+
+              <div class="p-5 flex flex-col flex-grow">
+                <h3 class="font-bold text-gray-900 text-base mb-1">${product.title}</h3>
+                <p class="text-xs text-gray-500 mb-3 leading-relaxed">${product.description}</p>
+                
+                <!-- Seleção de Tamanho -->
+                <div class="mb-3" id="size-group-${product.id}">
+                  <span class="text-[11px] text-gray-400 font-medium block mb-1">Tamanho:</span>
+                  <div class="flex gap-1.5">
+                    ${product.sizes.map(size => `
+                      <button onclick="selectSize(this, ${product.id}, '${size}')" 
+                              class="size-btn-${product.id} border ${selectedSizes[product.id] === size ? 'bg-brand text-white border-brand' : 'border-gray-200'} text-xs px-3 py-1 rounded hover:border-brand">
+                        ${size}
+                      </button>
+                    `).join('')}
+                  </div>
+                </div>
+
+                <!-- Seleção de Cor -->
+                <div class="mb-4" id="color-group-${product.id}">
+                  <span class="text-[11px] text-gray-400 font-medium block mb-1">Cor: <b class="text-gray-700" id="color-label-${product.id}">${currentSelectedColor.name}</b></span>
+                  <div class="flex gap-1.5 flex-wrap">
+                    ${product.colors.map((color, idx) => `
+                      <button onclick="${color.disponivel === false ? '' : `selectColor(this, ${product.id}, ${idx})`}" 
+                              ${color.disponivel === false ? 'disabled' : ''}
+                              class="color-btn-${product.id} border ${currentSelectedColor.name === color.name ? 'bg-brand-light border-brand font-bold' : 'border-gray-200'} text-xs px-2.5 py-1 rounded hover:border-brand flex items-center gap-1.5 ${color.disponivel === false ? 'opacity-40 cursor-not-allowed line-through' : ''}">
+                        <span class="w-2.5 h-2.5 rounded-full border border-gray-300" style="background-color: ${color.hex}"></span>
+                        ${color.name}${color.disponivel === false ? ' (esgotado)' : ''}
+                      </button>
+                    `).join('')}
+                  </div>
+                </div>
+
+                <!-- Valor e Botão Adicionar -->
+                <div class="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
+                  <div>
+                    <span class="text-[10px] text-gray-400 block uppercase">Valor</span>
+                    <div class="flex items-baseline gap-1.5">
+                      <span class="text-lg font-bold text-brand">R$ ${product.price.toFixed(2).replace('.', ',')}</span>
+                      ${product.oldPrice ? `<span class="text-xs text-gray-400 line-through">R$ ${product.oldPrice.toFixed(2).replace('.', ',')}</span>` : ''}
+                    </div>
+                  </div>
+                  <button onclick="addToCart(${product.id})" class="bg-brand text-white px-4 py-2 rounded-xl text-xs font-medium hover:bg-brand-dark transition shadow-sm">
+                    Adicionar
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      });
+
+      document.getElementById('no-results').classList.toggle('hidden', visibleCount > 0);
+    }
+
+    function renderMediaHtml(type, src, alt) {
+      if (type === 'video') {
+        return `<video src="${src}" controls autoplay class="w-full h-full object-cover rounded-xl"></video>`;
+      }
+      return `<img src="${src}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://via.placeholder.com/400x500/FDF2F4/7A122C?text=${encodeURIComponent(alt)}';" />`;
+    }
+
+    function selectColor(btn, productId, colorIndex) {
+      const product = products.find(p => p.id === productId);
+      const chosenColor = product.colors[colorIndex];
+      selectedColors[productId] = chosenColor;
+
+      const label = document.getElementById(`color-label-${productId}`);
+      if (label) label.innerText = chosenColor.name;
+
+      const container = document.getElementById(`media-container-${productId}`);
+      if (container) {
+        container.innerHTML = renderMediaHtml(chosenColor.mediaType, chosenColor.mediaSrc, product.title);
+      }
+
+      const buttons = document.querySelectorAll(`.color-btn-${productId}`);
+      buttons.forEach(b => {
+        b.classList.remove('bg-brand-light', 'border-brand', 'font-bold');
+        b.classList.add('border-gray-200');
+      });
+      btn.classList.add('bg-brand-light', 'border-brand', 'font-bold');
+      btn.classList.remove('border-gray-200');
+    }
+
+    function selectSize(btn, productId, size) {
+      selectedSizes[productId] = size;
+      const buttons = document.querySelectorAll(`.size-btn-${productId}`);
+      buttons.forEach(b => {
+        b.classList.remove('bg-brand', 'text-white', 'border-brand');
+        b.classList.add('border-gray-200');
+      });
+      btn.classList.add('bg-brand', 'text-white', 'border-brand');
+      btn.classList.remove('border-gray-200');
+    }
+
+    function selectCategory(category, btn) {
+      activeCategory = category;
+      document.querySelectorAll('.cat-btn').forEach(b => {
+        b.classList.remove('bg-brand', 'text-white', 'border-brand');
+        b.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
+      });
+      btn.classList.add('bg-brand', 'text-white', 'border-brand');
+      btn.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
+
+      renderProducts();
+    }
+
+    function destacarCampoObrigatorio(elementId) {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+      el.classList.add('ring-2', 'ring-red-400', 'rounded-lg');
+      setTimeout(() => el.classList.remove('ring-2', 'ring-red-400', 'rounded-lg'), 1500);
+    }
+
+    function addToCart(productId) {
+      const product = products.find(p => p.id === productId);
+      const size = selectedSizes[productId];
+      const color = selectedColors[productId];
+
+      if (!size) {
+        destacarCampoObrigatorio(`size-group-${productId}`);
+        return;
+      }
+      if (!color) {
+        destacarCampoObrigatorio(`color-group-${productId}`);
+        return;
+      }
+      if (color.disponivel === false) {
+        destacarCampoObrigatorio(`color-group-${productId}`);
+        return;
+      }
+
+      cart.push({ title: product.title, price: product.price, size: size, color: color.name });
+      localStorage.setItem('carrinho_dc', JSON.stringify(cart));
+      updateCart();
+      showToast();
+    }
+
+    function updateCart() {
+      document.getElementById('cart-count').innerText = cart.length;
+      const itemsContainer = document.getElementById('cart-items');
+      const totalContainer = document.getElementById('cart-total');
+      
+      if (cart.length === 0) {
+        itemsContainer.innerHTML = '<p class="text-gray-500 text-center py-4">Seu carrinho está vazio.</p>';
+        totalContainer.innerText = 'R$ 0,00';
+        return;
+      }
+
+      let total = 0;
+      itemsContainer.innerHTML = cart.map((item, index) => {
+        total += item.price;
+        return `
+          <div class="flex justify-between items-center bg-rose-50/50 p-2.5 rounded-xl border border-rose-100">
+            <div>
+              <span class="font-medium text-gray-800 block">${item.title}</span>
+              <div class="flex gap-1 mt-1">
+                <span class="text-[10px] bg-brand/10 text-brand font-bold px-1.5 py-0.5 rounded">Tamanho: ${item.size}</span>
+                <span class="text-[10px] bg-gray-100 text-gray-700 font-semibold px-1.5 py-0.5 rounded">Cor: ${item.color}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-brand">R$ ${item.price.toFixed(2).replace('.', ',')}</span>
+              <button onclick="removeFromCart(${index})" class="text-gray-400 hover:text-red-500 font-bold text-sm px-1">&times;</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      totalContainer.innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
+    }
+
+    function removeFromCart(index) {
+      cart.splice(index, 1);
+      localStorage.setItem('carrinho_dc', JSON.stringify(cart));
+      updateCart();
+    }
+
+    function showToast() {
+      const toast = document.getElementById('toast-added');
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+    }
+
+    function toggleCart() {
+      const modal = document.getElementById('cart-modal');
+      modal.classList.toggle('hidden');
+      modal.classList.toggle('flex');
+    }
+
+    function checkout() {
+      if (cart.length === 0) {
+        alert('Adicione produtos ao carrinho primeiro!');
+        return;
+      }
+
+      const deliveryType = document.querySelector('input[name="delivery_type"]:checked').value;
+
+      let summary = "Olá! Gostaria de fazer o seguinte pedido na Danielle Cristina Moda Íntima:\n\n";
+      let total = 0;
+      cart.forEach((item, i) => {
+        summary += `${i+1}. *${item.title}*\n   • Tamanho: ${item.size}\n   • Cor: ${item.color}\n   • Valor: R$ ${item.price.toFixed(2).replace('.', ',')}\n\n`;
+        total += item.price;
+      });
+      
+      summary += `*Opção de Entrega:* ${deliveryType}\n`;
+      summary += `*Total do Pedido: R$ ${total.toFixed(2).replace('.', ',')}*\n\n`;
+      summary += "Por favor, me informe a disponibilidade e os dados para pagamento!";
+
+      window.open(`https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(summary)}`, '_blank');
+
+      cart = [];
+      localStorage.setItem('carrinho_dc', JSON.stringify(cart));
+      updateCart();
+    }
+  </script>
+</body>
+</html>

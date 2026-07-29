@@ -1,0 +1,13 @@
+{
+  "name": "Danielle Cristina - Moda Íntima",
+  "short_name": "Danielle Cristina",
+  "description": "Catálogo de moda íntima e pijamas",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#FDF2F4",
+  "theme_color": "#7A122C",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
