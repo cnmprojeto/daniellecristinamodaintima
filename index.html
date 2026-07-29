@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Danielle Cristina - Moda Íntima & Pijamas</title>
+  <title>Danielle Cristtina - Moda Íntima & Pijamas</title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#7A122C" />
   <link rel="apple-touch-icon" href="icon-192.png" />
@@ -37,11 +37,9 @@
   <header class="bg-white/95 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-rose-100">
     <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center gap-2">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full border-2 border-brand flex items-center justify-center font-serif text-brand font-bold text-lg bg-brand-light flex-shrink-0">
-          DC
-        </div>
+        <img src="img/logo.png" alt="Danielle Cristtina Moda Íntima" class="w-12 h-12 rounded-full object-cover border-2 border-brand flex-shrink-0" />
         <div>
-          <h1 class="text-lg font-bold text-brand leading-tight">Danielle Cristina</h1>
+          <h1 class="text-lg font-bold text-brand leading-tight">Danielle Cristtina</h1>
           <p class="text-[10px] uppercase tracking-widest text-gray-500 font-semibold">Moda Íntima</p>
         </div>
       </div>
@@ -61,6 +59,43 @@
       <div class="flex justify-center gap-3 text-xs">
         <span class="bg-white/80 text-gray-700 px-3 py-1 rounded-lg border border-gray-200">📍 Retirar na Loja</span>
         <span class="bg-white/80 text-gray-700 px-3 py-1 rounded-lg border border-gray-200">📦 Envio via Correios</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 🎁 Vales-Presente -->
+  <section class="max-w-6xl mx-auto px-4 pt-8">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="text-xl">🎁</span>
+      <h3 class="text-lg font-bold text-brand font-serif">Vale-Presente</h3>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="bg-white rounded-2xl border border-rose-100 shadow-sm overflow-hidden hover:shadow-md transition group">
+        <img src="img/vale_200.png" alt="Vale-presente R$ 200,00" class="w-full aspect-[16/11] object-cover" />
+        <div class="p-3 flex items-center justify-between">
+          <span class="font-bold text-brand">R$ 200,00</span>
+          <button onclick="pedirValePresente(200)" class="bg-brand-light text-brand px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-brand hover:text-white transition border border-rose-200">
+            Quero este
+          </button>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl border border-rose-100 shadow-sm overflow-hidden hover:shadow-md transition group">
+        <img src="img/vale_300.png" alt="Vale-presente R$ 300,00" class="w-full aspect-[16/11] object-cover" />
+        <div class="p-3 flex items-center justify-between">
+          <span class="font-bold text-brand">R$ 300,00</span>
+          <button onclick="pedirValePresente(300)" class="bg-brand-light text-brand px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-brand hover:text-white transition border border-rose-200">
+            Quero este
+          </button>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl border border-rose-100 shadow-sm overflow-hidden hover:shadow-md transition group">
+        <img src="img/vale_500.png" alt="Vale-presente R$ 500,00" class="w-full aspect-[16/11] object-cover" />
+        <div class="p-3 flex items-center justify-between">
+          <span class="font-bold text-brand">R$ 500,00</span>
+          <button onclick="pedirValePresente(500)" class="bg-brand-light text-brand px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-brand hover:text-white transition border border-rose-200">
+            Quero este
+          </button>
+        </div>
       </div>
     </div>
   </section>
@@ -901,7 +936,11 @@ let products = [
     }
 
     async function carregarProdutosDaPlanilha(url) {
-      const resposta = await fetch(url);
+      // Adiciona um parâmetro variável na URL pra evitar que o navegador ou o
+      // Google Sheets sirvam uma cópia antiga (em cache) da planilha.
+      const separador = url.includes('?') ? '&' : '?';
+      const urlSemCache = `${url}${separador}_cb=${Date.now()}`;
+      const resposta = await fetch(urlSemCache, { cache: 'no-store' });
       const textoCsv = await resposta.text();
       const resultado = Papa.parse(textoCsv, { header: true, skipEmptyLines: true });
 
@@ -1246,6 +1285,11 @@ let products = [
       modal.classList.toggle('flex');
     }
 
+    function pedirValePresente(valor) {
+      const mensagem = `Olá! Gostaria de comprar um Vale-Presente Danielle Cristtina Moda Íntima no valor de R$ ${valor.toFixed(2).replace('.', ',')}.`;
+      window.open(`https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(mensagem)}`, '_blank');
+    }
+
     function checkout() {
       if (cart.length === 0) {
         alert('Adicione produtos ao carrinho primeiro!');
@@ -1254,7 +1298,7 @@ let products = [
 
       const deliveryType = document.querySelector('input[name="delivery_type"]:checked').value;
 
-      let summary = "Olá! Gostaria de fazer o seguinte pedido na Danielle Cristina Moda Íntima:\n\n";
+      let summary = "Olá! Gostaria de fazer o seguinte pedido na Danielle Cristtina Moda Íntima:\n\n";
       let total = 0;
       cart.forEach((item, i) => {
         summary += `${i+1}. *${item.title}*\n   • Tamanho: ${item.size}\n   • Cor: ${item.color}\n   • Valor: R$ ${item.price.toFixed(2).replace('.', ',')}\n\n`;
