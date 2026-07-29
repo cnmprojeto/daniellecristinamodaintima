@@ -1158,7 +1158,7 @@ let products = [
     }
 
     function selectColor(btn, productId, colorIndex) {
-      const product = products.find(p => p.id === productId);
+      const product = products.find(p => p.id == productId);
       const chosenColor = product.colors[colorIndex];
       selectedColors[productId] = chosenColor;
 
@@ -1210,7 +1210,7 @@ let products = [
     }
 
     function addToCart(productId) {
-      const product = products.find(p => p.id === productId);
+      const product = products.find(p => p.id == productId);
       const size = selectedSizes[productId];
       const color = selectedColors[productId];
 
