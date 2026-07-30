@@ -938,6 +938,7 @@ let products = [
     let cart = JSON.parse(localStorage.getItem('carrinho_dc') || '[]');
     let selectedSizes = {};
     let selectedColors = {};
+    let selectedMediaIndex = {};
     let activeCategory = 'todos';
 
     // =========================================================================
@@ -972,21 +973,62 @@ let products = [
             promoTag: linha.promo_tag || '',
             bestseller: normalizarBool(linha.bestseller),
             description: linha.descricao || '',
-            sizes: (linha.tamanhos || '').split(',').map(s => s.trim()).filter(Boolean),
-            colors: []
+            colorsMap: {} // agrupa por nome da cor antes de virar array
           };
         }
 
-        agrupados[id].colors.push({
-          name: linha.cor_nome || 'Padrão',
-          hex: linha.cor_hex || '#cccccc',
-          mediaType: String(linha.midia_tipo || 'foto').toLowerCase() === 'video' ? 'video' : 'img',
-          mediaSrc: linha.midia_url || '',
-          disponivel: linha.disponivel === undefined || linha.disponivel === '' ? true : normalizarBool(linha.disponivel)
-        });
+        const nomeCor = linha.cor_nome || 'Padrão';
+        const produto = agrupados[id];
+
+        if (!produto.colorsMap[nomeCor]) {
+          produto.colorsMap[nomeCor] = {
+            name: nomeCor,
+            hex: linha.cor_hex || '#cccccc',
+            sizes: (linha.tamanhos || '').split(',').map(s => s.trim()).filter(Boolean),
+            disponivel: linha.disponivel === undefined || linha.disponivel === '' ? true : normalizarBool(linha.disponivel),
+            media: []
+          };
+        }
+
+        // Cada linha da planilha com o mesmo id + cor_nome vira mais uma foto/vídeo
+        // dentro da galeria dessa cor (permite várias fotos e vídeo no mesmo anúncio).
+        if (linha.midia_url && linha.midia_url.trim() !== '') {
+          produto.colorsMap[nomeCor].media.push({
+            type: String(linha.midia_tipo || 'foto').toLowerCase() === 'video' ? 'video' : 'img',
+            src: linha.midia_url.trim()
+          });
+        }
+
+        // Se uma linha posterior da mesma cor trouxer tamanhos e a primeira não trouxe, aproveita.
+        if (produto.colorsMap[nomeCor].sizes.length === 0 && linha.tamanhos) {
+          produto.colorsMap[nomeCor].sizes = linha.tamanhos.split(',').map(s => s.trim()).filter(Boolean);
+        }
       });
 
-      return Object.values(agrupados);
+      return Object.values(agrupados).map(p => {
+        const colors = Object.values(p.colorsMap);
+        delete p.colorsMap;
+        p.colors = colors;
+        return p;
+      });
+    }
+
+    // Deixa o formato dos produtos sempre no modelo novo (tamanhos e mídia por cor),
+    // convertendo automaticamente produtos que ainda estejam no formato antigo
+    // (tamanhos no produto todo, uma foto só por cor) — assim tanto os produtos de
+    // exemplo quanto os vindos da planilha funcionam do mesmo jeito.
+    function normalizarProdutos(lista) {
+      lista.forEach(product => {
+        (product.colors || []).forEach(color => {
+          if (!color.media) {
+            color.media = color.mediaSrc ? [{ type: color.mediaType === 'video' ? 'video' : 'img', src: color.mediaSrc }] : [];
+          }
+          if (!color.sizes || color.sizes.length === 0) {
+            color.sizes = product.sizes ? [...product.sizes] : [];
+          }
+        });
+      });
+      return lista;
     }
 
     async function inicializarProdutos() {
@@ -1000,6 +1042,8 @@ let products = [
           return;
         }
       }
+
+      products = normalizarProdutos(products);
 
       products.forEach(p => {
         if (p.colors && p.colors.length > 0) {
@@ -1033,7 +1077,7 @@ let products = [
             </span>
             
             <div class="h-48 bg-rose-50/50 rounded-xl overflow-hidden mb-3 relative flex items-center justify-center">
-              ${renderMediaHtml(currentColor.mediaType, currentColor.mediaSrc, product.title)}
+              ${renderMediaHtml(product.id, currentColor, product.title)}
             </div>
 
             <h4 class="font-bold text-gray-800 text-sm mb-1 truncate">${product.title}</h4>
@@ -1113,7 +1157,7 @@ let products = [
               <!-- Foto Vinculada à Cor -->
               <div class="h-48 bg-rose-50/50 relative overflow-hidden flex flex-col justify-between p-2">
                 <div class="w-full h-full rounded-xl overflow-hidden relative bg-white flex items-center justify-center" id="media-container-${product.id}">
-                  ${renderMediaHtml(currentSelectedColor.mediaType, currentSelectedColor.mediaSrc, product.title)}
+                  ${renderMediaHtml(product.id, currentSelectedColor, product.title)}
                 </div>
               </div>
 
@@ -1121,12 +1165,12 @@ let products = [
                 <h3 class="font-bold text-gray-900 text-base mb-1">${product.title}</h3>
                 <p class="text-xs text-gray-500 mb-3 leading-relaxed">${product.description}</p>
                 
-                <!-- Seleção de Tamanho -->
+                <!-- Seleção de Tamanho (depende da cor escolhida) -->
                 <div class="mb-3" id="size-group-${product.id}">
                   <span class="text-[11px] text-gray-400 font-medium block mb-1">Tamanho:</span>
-                  <div class="flex gap-1.5">
-                    ${product.sizes.map(size => `
-                      <button onclick="selectSize(this, ${product.id}, '${size}')" 
+                  <div class="flex gap-1.5 flex-wrap">
+                    ${currentSelectedColor.sizes.map(size => `
+                      <button onclick="selectSize(this, ${JSON.stringify(product.id)}, '${size}')" 
                               class="size-btn-${product.id} border ${selectedSizes[product.id] === size ? 'bg-brand text-white border-brand' : 'border-gray-200'} text-xs px-3 py-1 rounded hover:border-brand">
                         ${size}
                       </button>
@@ -1171,24 +1215,59 @@ let products = [
       document.getElementById('no-results').classList.toggle('hidden', visibleCount > 0);
     }
 
-    function renderMediaHtml(type, src, alt) {
-      if (type === 'video') {
-        return `<video src="${src}" controls autoplay class="w-full h-full object-cover rounded-xl"></video>`;
+    function renderUmaMidia(item, alt) {
+      if (item.type === 'video') {
+        return `<video src="${item.src}" controls class="w-full h-full object-cover rounded-xl"></video>`;
       }
-      return `<img src="${src}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://via.placeholder.com/400x500/FDF2F4/7A122C?text=${encodeURIComponent(alt)}';" />`;
+      return `<img src="${item.src}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://via.placeholder.com/400x500/FDF2F4/7A122C?text=${encodeURIComponent(alt)}';" />`;
+    }
+
+    // Renderiza a galeria de mídia da cor atual (1 foto, várias fotos, e/ou vídeo).
+    // Se houver mais de um item, mostra setas de navegação e bolinhas indicando a posição.
+    function renderMediaHtml(productId, color, alt) {
+      const midias = (color.media && color.media.length > 0) ? color.media : [{ type: 'img', src: '' }];
+      const indiceAtual = selectedMediaIndex[productId] || 0;
+      const indice = Math.min(indiceAtual, midias.length - 1);
+      const itemAtual = midias[indice];
+
+      let setas = '';
+      let bolinhas = '';
+      if (midias.length > 1) {
+        setas = `
+          <button onclick="event.stopPropagation(); mudarMidia(${JSON.stringify(productId)}, ${indice - 1}, ${midias.length})" class="absolute left-1 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-brand w-6 h-6 rounded-full flex items-center justify-center text-xs shadow z-10">‹</button>
+          <button onclick="event.stopPropagation(); mudarMidia(${JSON.stringify(productId)}, ${indice + 1}, ${midias.length})" class="absolute right-1 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-brand w-6 h-6 rounded-full flex items-center justify-center text-xs shadow z-10">›</button>
+        `;
+        bolinhas = `
+          <div class="absolute bottom-1 left-0 right-0 flex justify-center gap-1 z-10">
+            ${midias.map((_, i) => `<span class="w-1.5 h-1.5 rounded-full ${i === indice ? 'bg-brand' : 'bg-white/70'} border border-brand/30"></span>`).join('')}
+          </div>
+        `;
+      }
+
+      return `${setas}${bolinhas}${renderUmaMidia(itemAtual, alt)}`;
+    }
+
+    function mudarMidia(productId, novoIndice, total) {
+      const indiceCorrigido = ((novoIndice % total) + total) % total; // dá a volta nas duas pontas
+      selectedMediaIndex[productId] = indiceCorrigido;
+      const container = document.getElementById(`media-container-${productId}`);
+      const product = products.find(p => p.id == productId);
+      const cor = selectedColors[productId] || product.colors[0];
+      if (container) container.innerHTML = renderMediaHtml(productId, cor, product.title);
     }
 
     function selectColor(btn, productId, colorIndex) {
       const product = products.find(p => p.id == productId);
       const chosenColor = product.colors[colorIndex];
       selectedColors[productId] = chosenColor;
+      selectedMediaIndex[productId] = 0; // volta pra primeira foto da nova cor
 
       const label = document.getElementById(`color-label-${productId}`);
       if (label) label.innerText = chosenColor.name;
 
       const container = document.getElementById(`media-container-${productId}`);
       if (container) {
-        container.innerHTML = renderMediaHtml(chosenColor.mediaType, chosenColor.mediaSrc, product.title);
+        container.innerHTML = renderMediaHtml(productId, chosenColor, product.title);
       }
 
       const buttons = document.querySelectorAll(`.color-btn-${productId}`);
@@ -1198,6 +1277,25 @@ let products = [
       });
       btn.classList.add('bg-brand-light', 'border-brand', 'font-bold');
       btn.classList.remove('border-gray-200');
+
+      // Cada cor pode ter tamanhos diferentes — refaz os botões de tamanho
+      // pra essa cor específica, e limpa a seleção se o tamanho escolhido
+      // antes não existir mais nas opções da nova cor.
+      if (selectedSizes[productId] && !chosenColor.sizes.includes(selectedSizes[productId])) {
+        delete selectedSizes[productId];
+      }
+      const sizeGroup = document.getElementById(`size-group-${productId}`);
+      if (sizeGroup) {
+        const listaTamanhos = sizeGroup.querySelector('.flex');
+        if (listaTamanhos) {
+          listaTamanhos.innerHTML = chosenColor.sizes.map(size => `
+            <button onclick="selectSize(this, ${JSON.stringify(productId)}, '${size}')" 
+                    class="size-btn-${productId} border ${selectedSizes[productId] === size ? 'bg-brand text-white border-brand' : 'border-gray-200'} text-xs px-3 py-1 rounded hover:border-brand">
+              ${size}
+            </button>
+          `).join('');
+        }
+      }
     }
 
     function selectSize(btn, productId, size) {
